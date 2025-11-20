@@ -4,117 +4,75 @@
 <meta charset="UTF-8">
 <title>MisterAI GPT</title>
 <style>
-    body { margin:0; padding:0; background:#000; font-family:"Cairo"; color:#fff; overflow:hidden; }
-
-    /* خلفية النجوم */
-    #stars, #stars2, #stars3 {
-        position:fixed; top:0; left:0; width:100%; height:100%;
-        background:url('https://i.imgur.com/1N1KxW9.png') repeat;
-    }
-    #stars { animation:animStar 50s linear infinite; opacity:1; }
-    #stars2 { animation:animStar 100s linear infinite; opacity:.6; }
-    #stars3 { animation:animStar 150s linear infinite; opacity:.3; }
-
-    @keyframes animStar {
-        from{background-position:0 0;}
-        to{background-position:0 2000px;}
+    body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        font-family: "Arial";
+        color: #fff;
+        text-align: center;
     }
 
-    /* صندوق الدردشة */
-    .chat-box {
-        width:60%; height:65%; margin:auto; margin-top:60px;
-        border:3px solid #00ffe7; border-radius:20px;
-        padding:20px; background:rgba(0,0,0,.6);
-        box-shadow:0 0 25px #00ffe7; overflow-y:auto; z-index:3; position:relative;
+    h1 {
+        margin-top: 40px;
+        font-size: 32px;
+        color: #00f7ff;
+        text-shadow: 0 0 10px #00f7ff;
     }
 
-    .message {
-        padding:10px 15px; margin:10px 0;
-        background:rgba(0,255,200,0.1);
-        border:1px solid #00ffe7; border-radius:10px;
-        width:fit-content; max-width:80%;
-        white-space:pre-wrap;
-    }
-    .ai { animation: neonPulse 1.2s ease-out forwards; }
-
-    @keyframes neonPulse {
-        0% { box-shadow: 0 0 5px #00ffe7; }
-        50% { box-shadow: 0 0 25px #00ffe7; }
-        100% { box-shadow: 0 0 8px #00ffe7; }
+    #chatBox {
+        width: 70%;
+        height: 60vh;
+        margin: 20px auto;
+        padding: 15px;
+        border: 2px solid #00f7ff;
+        border-radius: 15px;
+        background: rgba(0,0,0,0.4);
+        overflow-y: auto;
+        text-align: left;
     }
 
-    /* شريط الإرسال */
-    .bottom-bar {
-        width:60%; margin:auto; margin-top:10px; display:flex; gap:10px; z-index:3;
+    .msg { margin: 10px 0; padding: 10px; border-bottom: 1px solid #00f7ff55; }
+
+    #inputBox {
+        width: 60%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 2px solid #00f7ff;
+        background: #001a1a;
+        color: #fff;
+        outline: none;
+        font-size: 16px;
     }
 
-    input {
-        flex:1; padding:12px; border-radius:10px;
-        border:2px solid #00ffe7; background:#001a1a; color:#fff; outline:none;
-    }
-
-    button {
-        padding:12px 20px; background:#4c00ff; border:none; border-radius:10px;
-        color:#fff; cursor:pointer; font-size:16px; box-shadow:0 0 10px #4c00ff;
+    #btnSend {
+        padding: 12px 20px;
+        margin-left: 10px;
+        border: none;
+        background: #00f7ff;
+        color: #000;
+        border-radius: 10px;
+        font-size: 16px;
+        cursor: pointer;
     }
 </style>
 </head>
 <body>
 
-<!-- نجوم -->
-<div id="stars"></div>
-<div id="stars2"></div>
-<div id="stars3"></div>
+<h1>MisterAI GPT 🤖</h1>
 
-<!-- عنوان -->
-<h1 style="text-align:center; color:#00ffe7; margin-top:20px; position:relative; z-index:3;">
-    MisterAI GPT 🤖
-</h1>
+<div id="chatBox"></div>
 
-<!-- صندوق الدردشة -->
-<div id="chat" class="chat-box"></div>
-
-<!-- أسفل الإرسال -->
-<div class="bottom-bar">
-    <input id="msgInput" type="text" placeholder="اكتب رسالتك...">
-    <button onclick="sendMessage()">إرسال</button>
-</div>
+<input id="inputBox" placeholder="اكتب رسالتك...">
+<button id="btnSend" onclick="sendMsg()">إرسال</button>
 
 <script>
-function addMessage(text, sender="user") {
-    let box = document.getElementById("chat");
-    let div = document.createElement("div");
-    div.className = "message " + (sender === "bot" ? "ai" : "");
-    div.innerHTML = (sender === "user" ? "🧑‍💻 " : "🤖 ") + text;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-}
-
-function refreshStars() {
-    ["stars","stars2","stars3"].forEach(id=>{
-        let el = document.getElementById(id);
-        el.style.animation = "none";
-        void el.offsetWidth;
-        el.style.animation = (id==="stars" ? "animStar 50s linear infinite" :
-                             id==="stars2"? "animStar 100s linear infinite":
-                                            "animStar 150s linear infinite");
-    });
-}
-
-async function sendMessage() {
-    let input = document.getElementById("msgInput");
-    let msg = input.value.trim();
+async function sendMsg() {
+    let msg = document.getElementById("inputBox").value;
     if(!msg) return;
 
-    addMessage(msg, "user");
-    input.value = "";
-    refreshStars();
-
-    let loading = document.createElement("div");
-    loading.className = "message ai";
-    loading.id = "loadingMsg";
-    loading.innerHTML = "🤖 يكتب...";
-    document.getElementById("chat").appendChild(loading);
+    add("🧑‍💻 " + msg);
+    document.getElementById("inputBox").value = "";
 
     const res = await fetch("/api/chat", {
         method: "POST",
@@ -123,26 +81,16 @@ async function sendMessage() {
     });
 
     const data = await res.json();
-
-    document.getElementById("loadingMsg").remove();
-
-    typeWriterEffect(data.reply);
+    add("🤖 " + data.reply);
 }
 
-function typeWriterEffect(text) {
-    let chat = document.getElementById("chat");
+function add(text) {
+    let box = document.getElementById("chatBox");
     let div = document.createElement("div");
-    div.className = "message ai";
-    div.innerHTML = "🤖 ";
-    chat.appendChild(div);
-
-    let i = 0;
-    let interval = setInterval(() => {
-        div.innerHTML += text.charAt(i);
-        i++;
-        chat.scrollTop = chat.scrollHeight;
-        if(i >= text.length) clearInterval(interval);
-    }, 40);
+    div.className = "msg";
+    div.innerText = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
 }
 </script>
 
