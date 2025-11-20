@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MisterAI — نموذج ذكي</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #0ff;
+            font-family: "Cairo", sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 120px;
+            font-size: 40px;
+            text-shadow: 0 0 20px #00ffc8;
+        }
+
+        p {
+            margin-top: 20px;
+            font-size: 20px;
+            opacity: .8;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        /* نجوم تتساقط */
+        .star {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: #00ffe7;
+            border-radius: 50%;
+            animation: fall linear infinite;
+            opacity: .8;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0);
+            }
+            100% {
+                transform: translateY(110vh) translateX(20px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>مرحباً بك في MisterAI</h1>
+        <p>نموذج ذكي سيتم تطويره لاحقًا للبحث والإجابة على الأسئلة.</p>
+    </div>
+
+    <script>
+        // إنشاء نجوم تتساقط
+        function createStar() {
+            const star = document.createElement("div");
+            star.classList.add("star");
+            star.style.left = Math.random() * 100 + "vw";
+            star.style.animationDuration = (Math.random() * 2 + 2) + "s";
+            document.body.appendChild(star);
+
+            setTimeout(() => {
+                star.remove();
+            }, 4000);
+        }
+
+        setInterval(createStar, 150);
+    </script>
+
+</body>
+</html>
