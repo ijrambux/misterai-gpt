@@ -5,6 +5,8 @@
 <title>MisterAI GPT</title>
 <style>
     body { margin:0; padding:0; background:#000; font-family:"Cairo"; color:#fff; overflow:hidden; }
+
+    /* خلفية النجوم */
     #stars, #stars2, #stars3 {
         position:fixed; top:0; left:0; width:100%; height:100%;
         background:url('https://i.imgur.com/1N1KxW9.png') repeat;
@@ -12,25 +14,45 @@
     #stars { animation:animStar 50s linear infinite; opacity:1; }
     #stars2 { animation:animStar 100s linear infinite; opacity:.6; }
     #stars3 { animation:animStar 150s linear infinite; opacity:.3; }
-    @keyframes animStar { from{background-position:0 0;} to{background-position:0 2000px;} }
 
+    @keyframes animStar {
+        from{background-position:0 0;}
+        to{background-position:0 2000px;}
+    }
+
+    /* صندوق الدردشة */
     .chat-box {
-        width:55%; height:70%; margin:auto; margin-top:60px;
+        width:60%; height:65%; margin:auto; margin-top:60px;
         border:3px solid #00ffe7; border-radius:20px;
         padding:20px; background:rgba(0,0,0,.6);
-        box-shadow:0 0 25px #00ffe7; overflow-y:auto; position:relative; z-index:3;
+        box-shadow:0 0 25px #00ffe7; overflow-y:auto; z-index:3; position:relative;
     }
+
     .message {
         padding:10px 15px; margin:10px 0;
         background:rgba(0,255,200,0.1);
-        border:1px solid #00ffe7; border-radius:10px; width:fit-content; max-width:80%;
+        border:1px solid #00ffe7; border-radius:10px;
+        width:fit-content; max-width:80%;
         white-space:pre-wrap;
     }
-    .bottom-bar { width:55%; margin:auto; margin-top:10px; display:flex; gap:10px; z-index:3; }
+    .ai { animation: neonPulse 1.2s ease-out forwards; }
+
+    @keyframes neonPulse {
+        0% { box-shadow: 0 0 5px #00ffe7; }
+        50% { box-shadow: 0 0 25px #00ffe7; }
+        100% { box-shadow: 0 0 8px #00ffe7; }
+    }
+
+    /* شريط الإرسال */
+    .bottom-bar {
+        width:60%; margin:auto; margin-top:10px; display:flex; gap:10px; z-index:3;
+    }
+
     input {
         flex:1; padding:12px; border-radius:10px;
         border:2px solid #00ffe7; background:#001a1a; color:#fff; outline:none;
     }
+
     button {
         padding:12px 20px; background:#4c00ff; border:none; border-radius:10px;
         color:#fff; cursor:pointer; font-size:16px; box-shadow:0 0 10px #4c00ff;
@@ -39,14 +61,20 @@
 </head>
 <body>
 
-<div id="stars"></div><div id="stars2"></div><div id="stars3"></div>
+<!-- نجوم -->
+<div id="stars"></div>
+<div id="stars2"></div>
+<div id="stars3"></div>
 
+<!-- عنوان -->
 <h1 style="text-align:center; color:#00ffe7; margin-top:20px; position:relative; z-index:3;">
     MisterAI GPT 🤖
 </h1>
 
+<!-- صندوق الدردشة -->
 <div id="chat" class="chat-box"></div>
 
+<!-- أسفل الإرسال -->
 <div class="bottom-bar">
     <input id="msgInput" type="text" placeholder="اكتب رسالتك...">
     <button onclick="sendMessage()">إرسال</button>
@@ -56,7 +84,7 @@
 function addMessage(text, sender="user") {
     let box = document.getElementById("chat");
     let div = document.createElement("div");
-    div.className = "message";
+    div.className = "message " + (sender === "bot" ? "ai" : "");
     div.innerHTML = (sender === "user" ? "🧑‍💻 " : "🤖 ") + text;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
@@ -67,9 +95,9 @@ function refreshStars() {
         let el = document.getElementById(id);
         el.style.animation = "none";
         void el.offsetWidth;
-        if(id==="stars") el.style.animation="animStar 50s linear infinite";
-        if(id==="stars2") el.style.animation="animStar 100s linear infinite";
-        if(id==="stars3") el.style.animation="animStar 150s linear infinite";
+        el.style.animation = (id==="stars" ? "animStar 50s linear infinite" :
+                             id==="stars2"? "animStar 100s linear infinite":
+                                            "animStar 150s linear infinite");
     });
 }
 
@@ -78,11 +106,15 @@ async function sendMessage() {
     let msg = input.value.trim();
     if(!msg) return;
 
-    addMessage(msg,"user");
+    addMessage(msg, "user");
     input.value = "";
     refreshStars();
 
-    addMessage("⏳ جاري التفكير...","bot");
+    let loading = document.createElement("div");
+    loading.className = "message ai";
+    loading.id = "loadingMsg";
+    loading.innerHTML = "🤖 يكتب...";
+    document.getElementById("chat").appendChild(loading);
 
     const res = await fetch("/api/chat", {
         method: "POST",
@@ -92,14 +124,27 @@ async function sendMessage() {
 
     const data = await res.json();
 
-    document.querySelectorAll(".message").forEach(m=>{
-        if(m.textContent.includes("جاري التفكير")) m.remove();
-    });
+    document.getElementById("loadingMsg").remove();
 
-    addMessage(data.reply,"bot");
+    typeWriterEffect(data.reply);
+}
+
+function typeWriterEffect(text) {
+    let chat = document.getElementById("chat");
+    let div = document.createElement("div");
+    div.className = "message ai";
+    div.innerHTML = "🤖 ";
+    chat.appendChild(div);
+
+    let i = 0;
+    let interval = setInterval(() => {
+        div.innerHTML += text.charAt(i);
+        i++;
+        chat.scrollTop = chat.scrollHeight;
+        if(i >= text.length) clearInterval(interval);
+    }, 40);
 }
 </script>
 
 </body>
 </html>
-
