@@ -1,173 +1,183 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>MisterAI GPT 🤖</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MisterAI GPT 🤖</title>
 
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            overflow: hidden;
-            background: #000;
-            font-family: Arial, sans-serif;
-            direction: rtl;
-            color: white;
-        }
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      font-family: "Cairo", sans-serif;
+      color: #fff;
+      overflow: hidden;
+    }
 
-        /* نجوم تتساقط */
-        .star {
-            position: fixed;
-            width: 3px;
-            height: 3px;
-            background: #00f7ff;
-            box-shadow: 0 0 10px #00f7ff;
-            border-radius: 50%;
-            animation: fall linear infinite;
-        }
+    /* خلفية نجوم */
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
 
-        @keyframes fall {
-            from {transform: translateY(-10vh);}
-            to {transform: translateY(110vh);}
-        }
+    .container {
+      width: 60%;
+      margin: 50px auto;
+      padding: 25px;
+      border: 3px solid #00ffea;
+      border-radius: 20px;
+      box-shadow: 0 0 25px #00fff2;
+      text-align: center;
+    }
 
-        /* الإطار */
-        .frame {
-            width: 80%;
-            height: 80%;
-            margin: auto;
-            margin-top: 5vh;
-            border: 4px solid #00f7ff;
-            border-radius: 30px;
-            box-shadow: 0 0 25px #00f7ff;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
+    #title {
+      font-size: 35px;
+      margin-bottom: 15px;
+      text-shadow: 0 0 15px #00fff7;
+    }
 
-        #messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            font-size: 18px;
-        }
+    #chatBox {
+      width: 100%;
+      height: 350px;
+      background: rgba(0, 255, 255, 0.05);
+      border: 2px solid #00ffe1;
+      border-radius: 15px;
+      padding: 15px;
+      overflow-y: auto;
+      text-align: right;
+    }
 
-        /* الرسائل */
-        .ai {
-            background: rgba(0,255,255,0.12);
-            padding: 10px;
-            border-radius: 12px;
-            margin: 5px 0;
-        }
+    .msg {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 10px;
+    }
 
-        .user {
-            background: rgba(170,0,255,0.20);
-            padding: 10px;
-            border-radius: 12px;
-            margin: 5px 0;
-            text-align: left;
-        }
+    .you {
+      background: #0066ff33;
+    }
 
-        /* إدخال الكتابة */
-        #inputBox {
-            display: flex;
-            margin-top: 10px;
-        }
+    .ai {
+      background: #00ffaa22;
+    }
 
-        #textInput {
-            flex: 1;
-            padding: 12px;
-            font-size: 18px;
-            border-radius: 12px;
-            border: none;
-            outline: none;
-            background: #111;
-            color: white;
-            box-shadow: 0 0 10px #00f7ff;
-        }
+    #inputArea {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
 
-        #sendBtn {
-            padding: 12px 20px;
-            margin-left: 10px;
-            background: #6a00ff;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 18px;
-            box-shadow: 0 0 12px #6a00ff;
-        }
-    </style>
+    #userMsg {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #00ffe1;
+      background: #001a1a;
+      color: #fff;
+      font-size: 18px;
+    }
+
+    button {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 10px;
+      background: #5b25ff;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #7b55ff;
+    }
+  </style>
 </head>
 
 <body>
 
-<script>
-    // إنشاء 60 نجمة
-    for (let i = 0; i < 60; i++) {
-        let s = document.createElement("div");
-        s.className = "star";
-        s.style.left = Math.random() * 100 + "vw";
-        s.style.animationDuration = (4 + Math.random() * 6) + "s";
-        document.body.appendChild(s);
-    }
-</script>
+<canvas id="stars"></canvas>
 
-<h1 style="text-align:center; color:#00f7ff; text-shadow:0 0 20px #00f7ff;">
-    MisterAI GPT 🤖
-</h1>
+<div class="container">
+  <h1 id="title">MisterAI GPT 🤖</h1>
 
-<div class="frame">
+  <div id="chatBox"></div>
 
-    <div id="messages"></div>
-
-    <div id="inputBox">
-        <input id="textInput" placeholder="اكتب هنا يا مستر AI..." />
-        <button id="sendBtn">إرسال</button>
-    </div>
-
+  <div id="inputArea">
+    <input type="text" id="userMsg" placeholder="اكتب رسالتك هنا..." />
+    <button onclick="sendMsg()">إرسال</button>
+  </div>
 </div>
 
 <script>
-    const messages = document.getElementById("messages");
-    const input = document.getElementById("textInput");
+/* ---------- خلفية نجوم متحركة ---------- */
+const canvas = document.getElementById("stars");
+const ctx = canvas.getContext("2d");
 
-    document.getElementById("sendBtn").onclick = sendMessage;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    function sendMessage() {
-        let text = input.value.trim();
-        if (text === "") return;
+let stars = [];
+for (let i = 0; i < 100; i++) {
+    stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2 });
+}
 
-        addUser(text);
-        input.value = "";
+function animateStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#00fff7";
+    stars.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+        s.y += 0.3;
+        if (s.y > canvas.height) s.y = 0;
+    });
+    requestAnimationFrame(animateStars);
+}
+animateStars();
 
-        fakeAIReply(text);
-    }
+/* ---------- إرسال الرسالة إلى API ---------- */
+async function sendMsg() {
+    const input = document.getElementById("userMsg");
+    const msg = input.value.trim();
+    if (!msg) return;
 
-    function addUser(msg) {
-        let div = document.createElement("div");
-        div.className = "user";
-        div.innerText = msg;
-        messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
-    }
+    addMsg(msg, "you");
+    input.value = "";
 
-    function addAI(msg) {
-        let div = document.createElement("div");
-        div.className = "ai";
-        div.innerText = msg;
-        messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
-    }
+    addMsg("⏳ جاري التفكير...", "ai");
 
-    function fakeAIReply(userMsg) {
-        addAI("🔍 جاري تحليل سؤالك...");
-        setTimeout(() => {
-            addAI("هذا نموذج تجريبي… نربط الذكاء الحقيقي (OpenAI API) كي تقولي.");
-        }, 1200);
-    }
+    const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg })
+    });
+
+    const data = await response.json();
+
+    document.querySelectorAll(".ai").forEach(m => {
+        if (m.textContent === "⏳ جاري التفكير...") m.remove();
+    });
+
+    addMsg(data.reply, "ai");
+}
+
+function addMsg(text, type) {
+    const box = document.getElementById("chatBox");
+    const div = document.createElement("div");
+    div.className = "msg " + type;
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
 </script>
 
 </body>
 </html>
+
 
