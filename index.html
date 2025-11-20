@@ -1,87 +1,68 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>MisterAI GPT</title>
   <style>
     body {
-      margin: 0;
-      background: #000;
-      color: #0ff;
-      font-family: "Cairo", sans-serif;
+      background: black;
+      color: cyan;
+      font-family: Arial;
       text-align: center;
+      padding: 30px;
     }
-
-    .container {
-      margin: 40px auto;
+    #box {
+      border: 2px solid cyan;
+      padding: 20px;
       width: 80%;
-      border: 1px solid #00eaff;
-      padding: 25px;
+      margin: auto;
       border-radius: 15px;
-      box-shadow: 0 0 20px #00f0ff;
     }
-
-    #chat {
-      height: 400px;
-      overflow-y: auto;
-      border-bottom: 1px solid #00eaff;
-      text-align: right;
-      padding: 10px;
-      font-size: 20px;
-    }
-
     input {
-      width: 80%;
-      padding: 15px;
+      width: 70%;
+      padding: 10px;
       background: #001010;
-      border: 1px solid #00eaff;
-      color: #0ff;
-      border-radius: 10px;
-      margin-top: 15px;
+      color: cyan;
+      border: 1px solid cyan;
     }
-
     button {
-      padding: 15px 25px;
-      background: #0ff;
+      padding: 10px 20px;
+      background: cyan;
+      color: black;
       border: none;
-      margin-right: 10px;
-      border-radius: 10px;
       cursor: pointer;
       font-weight: bold;
     }
   </style>
 </head>
-
 <body>
-  <h1>🤖 MisterAI GPT</h1>
 
-  <div class="container">
-    <div id="chat"></div>
+<h1>MisterAI GPT 🤖</h1>
 
-    <input id="message" placeholder="اكتب رسالتك..." />
-    <button onclick="sendMessage()">إرسال</button>
-  </div>
+<div id="box">
+  <div id="chat"></div>
 
-  <script>
-    async function sendMessage() {
-      const msg = document.getElementById("message").value;
-      if (!msg.trim()) return;
+  <br><br>
+  <input id="msg" placeholder="اكتب رسالتك هنا...">
+  <button onclick="sendMessage()">إرسال</button>
+</div>
 
-      const chat = document.getElementById("chat");
-      chat.innerHTML += `<p>🧑‍💻 <b>أنت:</b> ${msg}</p>`;
+<script>
+async function sendMessage() {
+  const msg = document.getElementById("msg").value;
 
-      document.getElementById("message").value = "";
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: msg })
+  });
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg }),
-      });
+  const data = await res.json();
 
-      const data = await response.json();
-      chat.innerHTML += `<p>🤖 <b>MisterAI:</b> ${data.reply}</p>`;
-      chat.scrollTop = chat.scrollHeight;
-    }
-  </script>
+  document.getElementById("chat").innerHTML +=
+    `<p>🔹 ${data.reply}</p>`;
+}
+</script>
+
 </body>
 </html>
