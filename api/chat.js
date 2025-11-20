@@ -1,16 +1,16 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   try {
     const { message } = req.body;
 
     if (!message) {
-      return res.status(400).json({ error: "No message provided" });
+      return res.status(400).json({ error: "Message is required" });
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const reply = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -19,21 +19,27 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "أنت مساعد ذكي تابع لمشروع MisterAI." },
+          { role: "system", content: "أنت مساعد ذكي اسمه MisterAI." },
           { role: "user", content: message }
         ]
       })
     });
 
-    const data = await response.json();
+    const data = await reply.json();
+
+    if (!data || !data.choices || !data.choices[0]) {
+      return res
+        .status(500)
+        .json({ error: "Invalid API response", details: data });
+    }
 
     res.status(200).json({
-      reply: data?.choices?.[0]?.message?.content || "❌ لا يوجد رد من API."
+      reply: data.choices[0].message.content
     });
 
   } catch (error) {
     res.status(500).json({
-      error: "Server error",
+      error: "Internal Server Error",
       details: error.message
     });
   }
