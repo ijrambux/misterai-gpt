@@ -1,66 +1,155 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MisterAI GPT</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            background: #000;
-            font-family: "Cairo", sans-serif;
-            overflow: hidden;
-            color: #00eaff;
-            text-align: center;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MisterAI GPT</title>
 
-        h1 {
-            margin-top: 100px;
-            font-size: 42px;
-            text-shadow: 0 0 15px #00f0ff;
-        }
+<style>
+body {
+  background: #000;
+  margin: 0;
+  font-family: "Cairo", sans-serif;
+  direction: rtl;
+  overflow: hidden;
+}
 
-        p {
-            font-size: 20px;
-            opacity: 0.8;
-            margin-top: 10px;
-        }
+/* Falling stars */
+.stars {
+  position: fixed;
+  width: 3px;
+  height: 3px;
+  background: #00ffcc;
+  box-shadow: 0 0 10px #00ffcc;
+  position: absolute;
+  top: -10px;
+  animation: fall 2s linear infinite;
+}
+@keyframes fall {
+  to { transform: translateY(110vh) translateX(-20px); opacity: 0; }
+}
 
-        /* Falling stars */
-        .star {
-            position: fixed;
-            width: 3px;
-            height: 3px;
-            background: #00eaff;
-            border-radius: 50%;
-            animation: fall linear infinite;
-        }
+/* Chat Container */
+#chatBox {
+  width: 75%;
+  height: 75vh;
+  margin: 40px auto;
+  background: rgba(10, 10, 10, 0.7);
+  border: 2px solid #00ffc8;
+  border-radius: 15px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 25px #00ffc8;
+  overflow-y: auto;
+  padding: 20px;
+  color: white;
+}
 
-        @keyframes fall {
-            0% { transform: translateY(-20vh) translateX(0); opacity: 1; }
-            100% { transform: translateY(120vh) translateX(20px); opacity: 0; }
-        }
-    </style>
+/* Message */
+.message {
+  padding: 12px 16px;
+  margin: 10px 0;
+  border-radius: 12px;
+  max-width: 85%;
+  animation: fadeIn 0.6s ease;
+}
+.you {
+  background: #202020;
+  margin-left: auto;
+  border-right: 3px solid #0ff;
+}
+.ai {
+  background: #111;
+  border-left: 3px solid #0ff;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Input Zone */
+#inputBar {
+  width: 75%;
+  margin: 0 auto;
+  display: flex;
+  gap: 10px;
+}
+#input {
+  flex: 1;
+  padding: 15px;
+  border-radius: 12px;
+  border: 2px solid #0ff;
+  background: #000;
+  color: #0ff;
+}
+#sendBtn {
+  padding: 15px 30px;
+  background: #5a35ff;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 0 15px #5a35ff;
+}
+</style>
+
 </head>
-
 <body>
-    <h1>MISTER AI GPT</h1>
-    <p>منصة ذكاء اصطناعي قيد التطوير...</p>
 
-    <script>
-        function createStar() {
-            const star = document.createElement("div");
-            star.classList.add("star");
-            star.style.left = Math.random() * 100 + "vw";
-            star.style.animationDuration = (Math.random() * 1.5 + 1.5) + "s";
-            document.body.appendChild(star);
+<!-- Stars -->
+<script>
+for (let i = 0; i < 100; i++) {
+  let star = document.createElement("div");
+  star.className = "stars";
+  star.style.left = Math.random() * 100 + "vw";
+  star.style.animationDelay = Math.random() * 2 + "s";
+  document.body.appendChild(star);
+}
+</script>
 
-            setTimeout(() => star.remove(), 3000);
-        }
+<h1 style="text-align:center;color:#00ffc8;font-size:40px;margin-top:20px;text-shadow:0 0 15px #00ffc8;">
+🤖 MisterAI GPT
+</h1>
 
-        setInterval(createStar, 120);
-    </script>
+<div id="chatBox"></div>
+
+<div id="inputBar">
+  <input id="input" placeholder="اكتب رسالتك..." />
+  <button id="sendBtn">إرسال</button>
+</div>
+
+<script>
+const chatBox = document.getElementById("chatBox");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("sendBtn");
+
+// Fake AI Reply (backend نركبه لاحقاً)
+function aiReply(text) {
+  let div = document.createElement("div");
+  div.className = "message ai";
+  div.innerHTML = "🤖 " + text;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+sendBtn.onclick = () => {
+  let text = input.value.trim();
+  if (!text) return;
+
+  let div = document.createElement("div");
+  div.className = "message you";
+  div.innerHTML = text;
+  chatBox.appendChild(div);
+
+  input.value = "";
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Simulate AI
+  setTimeout(() => {
+    aiReply("جارٍ معالجة رسالتك يا مصطفى...");
+  }, 400);
+};
+</script>
+
 </body>
 </html>
+
