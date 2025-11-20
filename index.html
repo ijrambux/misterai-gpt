@@ -1,68 +1,113 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MisterAI GPT</title>
+
   <style>
     body {
-      background: black;
+      background: #000;
       color: cyan;
-      font-family: Arial;
+      font-family: "Cairo", sans-serif;
       text-align: center;
-      padding: 30px;
+      padding: 40px;
     }
-    #box {
-      border: 2px solid cyan;
-      padding: 20px;
+
+    .container {
       width: 80%;
       margin: auto;
+      border: 2px solid cyan;
       border-radius: 15px;
+      padding: 30px;
     }
+
     input {
       width: 70%;
-      padding: 10px;
-      background: #001010;
+      padding: 12px;
+      background: #001;
+      border: 2px solid cyan;
       color: cyan;
-      border: 1px solid cyan;
+      border-radius: 5px;
     }
+
     button {
-      padding: 10px 20px;
+      padding: 12px 25px;
       background: cyan;
-      color: black;
       border: none;
+      border-radius: 5px;
       cursor: pointer;
       font-weight: bold;
     }
+
+    #messages {
+      margin-top: 30px;
+      text-align: right;
+      direction: rtl;
+    }
+
+    .msg {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid cyan;
+    }
   </style>
 </head>
+
 <body>
 
-<h1>MisterAI GPT 🤖</h1>
+  <h1>MisterAI GPT 🤖</h1>
 
-<div id="box">
-  <div id="chat"></div>
+  <div class="container">
+    <div id="messages"></div>
 
-  <br><br>
-  <input id="msg" placeholder="اكتب رسالتك هنا...">
-  <button onclick="sendMessage()">إرسال</button>
-</div>
+    <br>
 
-<script>
-async function sendMessage() {
-  const msg = document.getElementById("msg").value;
+    <input id="userInput" type="text" placeholder="اكتب رسالتك..." />
+    <button onclick="sendMessage()">إرسال</button>
+  </div>
 
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg })
-  });
+  <script>
+    async function sendMessage() {
+      const msg = document.getElementById("userInput").value;
+      if (!msg.trim()) return;
 
-  const data = await res.json();
+      // عرض رسالة المستخدم
+      addMessage("👤 أنت", msg);
 
-  document.getElementById("chat").innerHTML +=
-    `<p>🔹 ${data.reply}</p>`;
-}
-</script>
+      // إرسال للباك إند
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message: msg })
+        });
+
+        const data = await response.json();
+
+        if (data.reply) {
+          addMessage("🤖 MisterAI", data.reply);
+        } else {
+          addMessage("⚠️ خطأ", "لم يتم استلام رد من الخادم.");
+        }
+
+      } catch (e) {
+        addMessage("⚠️ خطأ", "حدث خطأ في الاتصال بالـ API.");
+      }
+
+      document.getElementById("userInput").value = "";
+    }
+
+    function addMessage(sender, text) {
+      const box = document.getElementById("messages");
+      const div = document.createElement("div");
+      div.className = "msg";
+      div.innerHTML = `<b>${sender}:</b> ${text}`;
+      box.prepend(div);
+    }
+  </script>
 
 </body>
 </html>
