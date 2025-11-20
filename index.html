@@ -1,65 +1,105 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MisterAI GPT 🤖</title>
-  <style>
-    body {
-      background: black;
-      font-family: Arial;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      color: cyan;
+<meta charset="UTF-8">
+<title>MisterAI GPT</title>
+<style>
+    body { margin:0; padding:0; background:#000; font-family:"Cairo"; color:#fff; overflow:hidden; }
+    #stars, #stars2, #stars3 {
+        position:fixed; top:0; left:0; width:100%; height:100%;
+        background:url('https://i.imgur.com/1N1KxW9.png') repeat;
     }
-    .box {
-      width: 600px;
-      border: 3px solid cyan;
-      padding: 20px;
-      border-radius: 15px;
+    #stars { animation:animStar 50s linear infinite; opacity:1; }
+    #stars2 { animation:animStar 100s linear infinite; opacity:.6; }
+    #stars3 { animation:animStar 150s linear infinite; opacity:.3; }
+    @keyframes animStar { from{background-position:0 0;} to{background-position:0 2000px;} }
+
+    .chat-box {
+        width:55%; height:70%; margin:auto; margin-top:60px;
+        border:3px solid #00ffe7; border-radius:20px;
+        padding:20px; background:rgba(0,0,0,.6);
+        box-shadow:0 0 25px #00ffe7; overflow-y:auto; position:relative; z-index:3;
     }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
+    .message {
+        padding:10px 15px; margin:10px 0;
+        background:rgba(0,255,200,0.1);
+        border:1px solid #00ffe7; border-radius:10px; width:fit-content; max-width:80%;
+        white-space:pre-wrap;
     }
-    input { background: #111; color: cyan; border: 1px solid cyan; }
-    button { background: cyan; color: black; cursor: pointer; }
-    #response { margin-top: 20px; color: #0ff; white-space: pre-wrap; }
-  </style>
+    .bottom-bar { width:55%; margin:auto; margin-top:10px; display:flex; gap:10px; z-index:3; }
+    input {
+        flex:1; padding:12px; border-radius:10px;
+        border:2px solid #00ffe7; background:#001a1a; color:#fff; outline:none;
+    }
+    button {
+        padding:12px 20px; background:#4c00ff; border:none; border-radius:10px;
+        color:#fff; cursor:pointer; font-size:16px; box-shadow:0 0 10px #4c00ff;
+    }
+</style>
 </head>
 <body>
 
-<div class="box">
-  <h2 style="text-align:center;">MisterAI GPT 🤖</h2>
+<div id="stars"></div><div id="stars2"></div><div id="stars3"></div>
 
-  <input id="msg" placeholder="اكتب سؤالك هنا..." />
+<h1 style="text-align:center; color:#00ffe7; margin-top:20px; position:relative; z-index:3;">
+    MisterAI GPT 🤖
+</h1>
 
-  <button onclick="send()">إرسال</button>
+<div id="chat" class="chat-box"></div>
 
-  <div id="response"></div>
+<div class="bottom-bar">
+    <input id="msgInput" type="text" placeholder="اكتب رسالتك...">
+    <button onclick="sendMessage()">إرسال</button>
 </div>
 
 <script>
-async function send() {
-  const message = document.getElementById("msg").value;
-  document.getElementById("response").innerText = "⏳ جاري التفكير...";
+function addMessage(text, sender="user") {
+    let box = document.getElementById("chat");
+    let div = document.createElement("div");
+    div.className = "message";
+    div.innerHTML = (sender === "user" ? "🧑‍💻 " : "🤖 ") + text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
 
-  const reply = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message })
-  });
+function refreshStars() {
+    ["stars","stars2","stars3"].forEach(id=>{
+        let el = document.getElementById(id);
+        el.style.animation = "none";
+        void el.offsetWidth;
+        if(id==="stars") el.style.animation="animStar 50s linear infinite";
+        if(id==="stars2") el.style.animation="animStar 100s linear infinite";
+        if(id==="stars3") el.style.animation="animStar 150s linear infinite";
+    });
+}
 
-  const data = await reply.json();
-  document.getElementById("response").innerText = data.reply;
+async function sendMessage() {
+    let input = document.getElementById("msgInput");
+    let msg = input.value.trim();
+    if(!msg) return;
+
+    addMessage(msg,"user");
+    input.value = "";
+    refreshStars();
+
+    addMessage("⏳ جاري التفكير...","bot");
+
+    const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ message: msg })
+    });
+
+    const data = await res.json();
+
+    document.querySelectorAll(".message").forEach(m=>{
+        if(m.textContent.includes("جاري التفكير")) m.remove();
+    });
+
+    addMessage(data.reply,"bot");
 }
 </script>
 
 </body>
 </html>
+
