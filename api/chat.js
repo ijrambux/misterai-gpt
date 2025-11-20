@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
-    const completion = await fetch("https://api.openai.com/v1/chat/completions", {
+    const reply = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -15,11 +15,15 @@ export default async function handler(req, res) {
           { role: "user", content: message }
         ]
       })
-    }).then(r => r.json());
+    });
 
-    res.status(200).json({ reply: completion.choices[0].message.content });
+    const data = await reply.json();
 
-  } catch (e) {
-    res.status(500).json({ reply: "⚠ خطأ في الخادم." });
+    res.status(200).json({
+      reply: data.choices?.[0]?.message?.content || "⚠️ لم يتم استلام رد من الخادم."
+    });
+
+  } catch (err) {
+    res.status(500).json({ reply: "⚠️ خطأ في الخادم 🤖" });
   }
 }
