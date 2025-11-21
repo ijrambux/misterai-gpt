@@ -1,5 +1,8 @@
 {
+  "name": "misterai-voice-chat",
+  "version": "1.0.0",
   "dependencies": {
-    "gtts": "2.2.3"
+    "groq-sdk": "latest",
+    "elevenlabs": "latest"
   }
 }
