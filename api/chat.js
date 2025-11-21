@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   try {
     const { prompt } = req.body;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -20,16 +20,27 @@ export default async function handler(req, res) {
       })
     });
 
-    const data = await response.json();
+    const data = await groqRes.json();
+
+    // لو كاين Error من Groq
+    if (!groqRes.ok) {
+      return res.status(500).json({
+        error: "Groq Error",
+        details: data
+      });
+    }
+
+    // الرد الحقيقي
+    const reply = data?.choices?.[0]?.message?.content;
 
     return res.status(200).json({
-      reply: data?.choices?.[0]?.message?.content || "❌ no reply from model"
+      reply: reply || "⚠️ Model returned empty response."
     });
 
   } catch (error) {
     return res.status(500).json({
-      error: "Server error: " + error.message
+      error: "Server crashed",
+      details: error.message
     });
   }
 }
-
