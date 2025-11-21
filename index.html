@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MisterAI GPT</title>
 
   <style>
@@ -13,7 +13,6 @@
       text-align: center;
       padding: 40px;
     }
-
     .container {
       width: 80%;
       margin: auto;
@@ -21,7 +20,6 @@
       border-radius: 15px;
       padding: 30px;
     }
-
     input {
       width: 60%;
       padding: 12px;
@@ -30,23 +28,20 @@
       color: cyan;
       border-radius: 5px;
     }
-
     button {
       padding: 12px 25px;
       background: cyan;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
+      margin-left: 4px;
       font-weight: bold;
-      margin-left: 5px;
     }
-
     #messages {
-      margin-top: 30px;
       text-align: right;
       direction: rtl;
+      margin-top: 20px;
     }
-
     .msg {
       padding: 10px;
       margin-bottom: 10px;
@@ -64,77 +59,38 @@
 
     <br>
 
-    <input id="userInput" type="text" placeholder="اكتب رسالتك..." />
-
-    <!-- زر التسجيل الصوتي -->
-    <button onclick="startListening()">🎤</button>
-
-    <!-- زر إرسال الرسالة -->
+    <input id="userInput" type="text" placeholder="اكتب رسالتك...">
     <button onclick="sendMessage()">إرسال</button>
   </div>
 
   <script>
-    // وظيفة إدخال صوتي (Speech-to-Text)
-    function startListening() {
-      if (!("webkitSpeechRecognition" in window)) {
-        alert("المتصفح لا يدعم التعرف على الصوت.");
-        return;
-      }
-
-      const recognition = new webkitSpeechRecognition();
-      recognition.lang = "ar-SA";
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.start();
-
-      recognition.onresult = function (event) {
-        const text = event.results[0][0].transcript;
-        document.getElementById("userInput").value = text;
-      };
-
-      recognition.onerror = function (event) {
-        console.error("Speech recognition error:", event.error);
-      };
-    }
-
-    // إرسال الرسالة للسيرفر
     async function sendMessage() {
-      const msg = document.getElementById("userInput").value;
-      if (!msg.trim()) return;
+      const msg = document.getElementById("userInput").value.trim();
+      if (!msg) return;
 
       addMessage("👤 أنت", msg);
 
-      try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ prompt: msg })
-        });
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: msg })
+      });
 
-        const data = await response.json();
+      const data = await res.json();
 
-        if (data.reply) {
-          addMessage("🤖 MisterAI", data.reply);
+      if (data.reply) {
+        addMessage("🤖 MisterAI", data.reply);
 
-          // تشغيل الرد بالصوت (Text-to-Speech)
-          const utter = new SpeechSynthesisUtterance(data.reply);
-          utter.lang = "ar-SA";
-          speechSynthesis.speak(utter);
-        } else {
-          addMessage("⚠️ خطأ", "لم يتم استلام رد من الخادم.");
+        // تشغيل الصوت
+        if (data.audio) {
+          const audio = new Audio("data:audio/mp3;base64," + data.audio);
+          audio.play();
         }
-
-      } catch (e) {
-        addMessage("⚠️ خطأ", "حدث خطأ في الاتصال بالـ API.");
       }
 
       document.getElementById("userInput").value = "";
     }
 
-    // عرض الرسائل
     function addMessage(sender, text) {
       const box = document.getElementById("messages");
       const div = document.createElement("div");
@@ -146,3 +102,4 @@
 
 </body>
 </html>
+
