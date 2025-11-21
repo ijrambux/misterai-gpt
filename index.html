@@ -23,7 +23,7 @@
     }
 
     input {
-      width: 70%;
+      width: 60%;
       padding: 12px;
       background: #001;
       border: 2px solid cyan;
@@ -38,6 +38,7 @@
       border-radius: 5px;
       cursor: pointer;
       font-weight: bold;
+      margin-left: 5px;
     }
 
     #messages {
@@ -64,15 +65,44 @@
     <br>
 
     <input id="userInput" type="text" placeholder="اكتب رسالتك..." />
+
+    <!-- زر التسجيل الصوتي -->
+    <button onclick="startListening()">🎤</button>
+
+    <!-- زر إرسال الرسالة -->
     <button onclick="sendMessage()">إرسال</button>
   </div>
 
   <script>
+    // وظيفة إدخال صوتي (Speech-to-Text)
+    function startListening() {
+      if (!("webkitSpeechRecognition" in window)) {
+        alert("المتصفح لا يدعم التعرف على الصوت.");
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = "ar-SA";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.start();
+
+      recognition.onresult = function (event) {
+        const text = event.results[0][0].transcript;
+        document.getElementById("userInput").value = text;
+      };
+
+      recognition.onerror = function (event) {
+        console.error("Speech recognition error:", event.error);
+      };
+    }
+
+    // إرسال الرسالة للسيرفر
     async function sendMessage() {
       const msg = document.getElementById("userInput").value;
       if (!msg.trim()) return;
 
-      // عرض رسالة المستخدم
       addMessage("👤 أنت", msg);
 
       try {
@@ -81,13 +111,18 @@
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ prompt: msg })   // 🔥 تم إصلاح الخطأ هنا
+          body: JSON.stringify({ prompt: msg })
         });
 
         const data = await response.json();
 
         if (data.reply) {
           addMessage("🤖 MisterAI", data.reply);
+
+          // تشغيل الرد بالصوت (Text-to-Speech)
+          const utter = new SpeechSynthesisUtterance(data.reply);
+          utter.lang = "ar-SA";
+          speechSynthesis.speak(utter);
         } else {
           addMessage("⚠️ خطأ", "لم يتم استلام رد من الخادم.");
         }
@@ -99,6 +134,7 @@
       document.getElementById("userInput").value = "";
     }
 
+    // عرض الرسائل
     function addMessage(sender, text) {
       const box = document.getElementById("messages");
       const div = document.createElement("div");
