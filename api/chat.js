@@ -1,24 +1,5 @@
-// ردود محلية جاهزة
-const localReplies = [
-  { q: ["سلام", "السلام", "سلام عليكم"], a: "وعليكم السلام ورحمة الله، كيف نعاونك؟" },
-  { q: ["اسمك", "من انت"], a: "أنا مساعد MisterAI تحت أمرك." },
-  { q: ["وقت", "ساعة"], a: "الوقت عندك في الهاتف يا عبقري." },
-  { q: ["مرحبا", "اهلا"], a: "مرحبا بيك! وش راك تحتاج؟" }
-];
-
-// دالة تبحث في الردود المحلية
-function checkLocalReply(text) {
-  text = text.toLowerCase();
-
-  for (let item of localReplies) {
-    for (let keyword of item.q) {
-      if (text.includes(keyword)) {
-        return item.a;
-      }
-    }
-  }
-  return null;
-}
+import fs from "fs";
+import path from "path";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -31,13 +12,22 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Prompt missing" });
     }
 
-    // 1) البحث المحلي
-    const local = checkLocalReply(prompt);
-    if (local) {
-      return res.status(200).json({ reply: local });
+    // 1) تحميل ملف الردود
+    const filePath = path.join(process.cwd(), "responses.json");
+    const fileData = fs.readFileSync(filePath, "utf8");
+    const { responses } = JSON.parse(fileData);
+
+    // 2) البحث في الردود المحلية
+    const lower = prompt.toLowerCase();
+    for (let item of responses) {
+      for (let keyword of item.keywords) {
+        if (lower.includes(keyword.toLowerCase())) {
+          return res.status(200).json({ reply: item.reply });
+        }
+      }
     }
 
-    // 2) اذا ما لقا → نبعث لـ GROQ
+    // 3) إذا لم يجد → يرسل إلى GROQ
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -53,16 +43,13 @@ export default async function handler(req, res) {
     const data = await groqRes.json();
 
     if (!groqRes.ok) {
-      return res.status(500).json({
-        error: "Groq Error",
-        details: data
-      });
+      return res.status(500).json({ error: "Groq Error", details: data });
     }
 
     const reply = data?.choices?.[0]?.message?.content;
 
     return res.status(200).json({
-      reply: reply || "⚠️ Model returned empty response."
+      reply: reply || "⚠️ النموذج ما رجّع والو."
     });
 
   } catch (error) {
