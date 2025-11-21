@@ -4,43 +4,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message } = req.body;
+    const { prompt } = req.body;
 
-    if (!message) {
-      return res.status(400).json({ error: "Message is required" });
-    }
-
-    const reply = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "llama-3.1-8b-instant",
         messages: [
-          { role: "system", content: "أنت مساعد ذكي اسمه MisterAI." },
-          { role: "user", content: message }
+          { role: "user", content: prompt }
         ]
       })
     });
 
-    const data = await reply.json();
+    const data = await response.json();
 
-    if (!data || !data.choices || !data.choices[0]) {
-      return res
-        .status(500)
-        .json({ error: "Invalid API response", details: data });
-    }
-
-    res.status(200).json({
-      reply: data.choices[0].message.content
+    return res.status(200).json({
+      reply: data?.choices?.[0]?.message?.content || "❌ no reply from model"
     });
 
   } catch (error) {
-    res.status(500).json({
-      error: "Internal Server Error",
-      details: error.message
+    return res.status(500).json({
+      error: "Server error: " + error.message
     });
   }
 }
+
