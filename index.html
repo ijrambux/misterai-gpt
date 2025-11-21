@@ -1,124 +1,99 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MisterAI GPT</title>
+  <meta charset="UTF-8">
+  <title>MisterAI Voice Chat</title>
   <style>
     body {
       background: #000;
       color: cyan;
       font-family: "Cairo", sans-serif;
-      text-align: center;
       padding: 40px;
+      text-align: center;
     }
 
-    .container {
+    .box {
       width: 80%;
       margin: auto;
+      padding: 25px;
       border: 2px solid cyan;
       border-radius: 15px;
-      padding: 30px;
-    }
-
-    input {
-      width: 70%;
-      padding: 12px;
-      background: #001;
-      border: 2px solid cyan;
-      color: cyan;
-      border-radius: 5px;
-    }
-
-    button {
-      padding: 12px 25px;
-      background: cyan;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      margin: 5px;
     }
 
     #messages {
-      margin-top: 30px;
+      margin-bottom: 25px;
       text-align: right;
       direction: rtl;
     }
 
     .msg {
       padding: 10px;
-      margin-bottom: 10px;
       border-bottom: 1px solid cyan;
+      margin-bottom: 10px;
+    }
+
+    input {
+      width: 80%;
+      padding: 12px;
+      font-size: 18px;
+      border: 2px solid cyan;
+      background: #001;
+      color: cyan;
+      border-radius: 6px;
+      outline: none;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>MisterAI GPT 🤖</h1>
+  <h1>MisterAI 🤖</h1>
 
-  <div class="container">
+  <div class="box">
     <div id="messages"></div>
 
-    <br>
-
-    <input id="userInput" type="text" placeholder="اكتب رسالتك..." />
-    <button onclick="sendMessage()">إرسال</button>
-
-    <!-- زر الاستماع -->
-    <button id="speakBtn" onclick="speakLastReply()">🔊 استمع للرد</button>
-
+    <input id="userInput" placeholder="اكتب سؤالك واضغط Enter..." />
   </div>
 
-  <script>
-    async function sendMessage() {
-      const msg = document.getElementById("userInput").value;
-      if (!msg.trim()) return;
+<script>
+  document.getElementById("userInput").addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+      sendText();
+    }
+  });
 
-      addMessage("👤 أنت", msg);
+  async function sendText() {
+    const msg = document.getElementById("userInput").value.trim();
+    if (!msg) return;
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg })
-      });
+    addMessage("👤 أنت", msg);
 
-      const data = await response.json();
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg })
+    });
 
-      if (data.reply) {
-        addMessage("🤖 MisterAI", data.reply);
-        window.lastReply = data.reply;  // نخزّن آخر رد
-      }
+    const data = await res.json();
 
-      document.getElementById("userInput").value = "";
+    addMessage("🤖 MisterAI", data.reply);
+
+    if (data.audioBase64) {
+      const audio = new Audio("data:audio/mp3;base64," + data.audioBase64);
+      audio.play();
     }
 
-    function addMessage(sender, text) {
-      const box = document.getElementById("messages");
-      const div = document.createElement("div");
-      div.className = "msg";
-      div.innerHTML = `<b>${sender}:</b> ${text}`;
-      box.prepend(div);
-    }
+    document.getElementById("userInput").value = "";
+  }
 
-    async function speakLastReply() {
-      if (!window.lastReply) return;
-
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: window.lastReply })
-      });
-
-      const data = await res.json();
-
-      if (data.audioBase64) {
-        const audio = new Audio("data:audio/mp3;base64," + data.audioBase64);
-        audio.play();
-      }
-    }
-  </script>
+  function addMessage(sender, txt) {
+    const box = document.getElementById("messages");
+    const el = document.createElement("div");
+    el.className = "msg";
+    el.innerHTML = `<b>${sender}:</b> ${txt}`;
+    box.prepend(el);
+  }
+</script>
 
 </body>
 </html>
