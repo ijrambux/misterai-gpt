@@ -1,58 +1,56 @@
-import { execSync } from "child_process";
-import fs from "fs";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
-import gTTS from "gtts";
+// /api/chat.js
+
+import Groq from "groq-sdk";
+import { ElevenLabsClient } from "elevenlabs";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
+    return res.status(405).json({ error: "Only POST method allowed" });
+  }
+
+  const { message } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ error: "Message is required" });
   }
 
   try {
-    const { prompt } = req.body;
+    // ============ 1 — GROQ AI (Text Reply) ============
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-    // 1. استدعاء Groq
-    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.1-70b-versatile",
-        messages: [
-          { role: "user", content: prompt }
-        ]
-      })
+    const groqResponse = await groq.chat.completions.create({
+      model: "llama3-8b-8192",
+      messages: [
+        { role: "user", content: message }
+      ]
     });
 
-    const data = await groqRes.json();
+    const reply = groqResponse.choices[0].message.content;
 
-    if (!groqRes.ok) {
-      return res.status(500).json({ error: "Groq error", details: data });
-    }
 
-    const reply = data?.choices?.[0]?.message?.content || "لم أتمكن من توليد رد.";
+    // ============ 2 — ELEVEN LABS (Arabic Voice) ============
+    const eleven = new ElevenLabsClient({
+      apiKey: process.env.ELEVENLABS_API_KEY
+    });
 
-    // 2. تحويل الرد إلى MP3 صوتي
-    const fileName = uuidv4() + ".mp3";
-    const filePath = path.join("/tmp", fileName);
+    const audioResponse = await eleven.textToSpeech.convert("eleven_multilingual_v2", {
+      text: reply,
+      voice_id: "JBFqnCBsd6RMkjVDRZzb", // صوت عربي
+      output_format: "mp3_44100_128"
+    });
 
-    const tts = new gTTS(reply, "ar");
-    await new Promise(resolve => tts.save(filePath, resolve));
+    // تحويل الصوت إلى base64
+    const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
+    const audioBase64 = audioBuffer.toString("base64");
 
-    // 3. قراءة الملف الصوتي وإرساله Base64 إلى الواجهة
-    const audioData = fs.readFileSync(filePath, { encoding: "base64" });
-
-    return res.status(200).json({
+    // ============ الرد النهائي ============
+    res.status(200).json({
       reply,
-      audio: audioData
+      audioBase64
     });
 
   } catch (err) {
-    return res.status(500).json({
-      error: err.message
-    });
+    console.error("Error:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 }
