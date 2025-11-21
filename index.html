@@ -75,14 +75,13 @@
       // عرض رسالة المستخدم
       addMessage("👤 أنت", msg);
 
-      // إرسال للباك إند
       try {
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ message: msg })
+          body: JSON.stringify({ prompt: msg })   // 🔥 تم إصلاح الخطأ هنا
         });
 
         const data = await response.json();
