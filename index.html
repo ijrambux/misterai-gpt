@@ -1,213 +1,112 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>MisterAI - Dark Matrix Chat</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MisterAI GPT</title>
 
   <style>
     body {
-      margin: 0;
-      background: black;
-      color: #0f0;
+      background: #000;
+      color: cyan;
       font-family: "Cairo", sans-serif;
-      overflow: hidden;
-    }
-
-    /* خلفية النجوم الخضر المتساقطة */
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-
-    /* العنوان المتوهّج */
-    h1 {
-      position: relative;
-      z-index: 2;
       text-align: center;
-      margin-top: 40px;
-      font-size: 40px;
-      color: #0f0;
-      text-shadow: 0 0 12px #0f0, 0 0 25px #0f0;
-      animation: glow 2s ease-in-out infinite alternate;
+      padding: 40px;
     }
 
-    @keyframes glow {
-      from { text-shadow: 0 0 8px #0f0; }
-      to { text-shadow: 0 0 20px #00ff88; }
-    }
-
-    /* صندوق الرسائل */
-    #chatbox {
-      position: relative;
-      z-index: 2;
-      width: 70%;
-      height: 70vh;
-      margin: 40px auto;
-      padding: 20px;
-      border: 1px solid #0f0;
+    .container {
+      width: 80%;
+      margin: auto;
+      border: 2px solid cyan;
       border-radius: 15px;
-      overflow-y: auto;
-      background: rgba(0, 10, 0, 0.6);
-      backdrop-filter: blur(3px);
-      color: #0f0;
+      padding: 30px;
+    }
+
+    input {
+      width: 70%;
+      padding: 12px;
+      background: #001;
+      border: 2px solid cyan;
+      color: cyan;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 12px 25px;
+      background: cyan;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #messages {
+      margin-top: 30px;
+      text-align: right;
+      direction: rtl;
     }
 
     .msg {
       padding: 10px;
       margin-bottom: 10px;
-      border-bottom: 1px solid #0f0;
-    }
-
-    /* إدخال الرسالة */
-    #inputArea {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 70%;
-      display: flex;
-      z-index: 2;
-    }
-
-    input {
-      flex: 1;
-      padding: 14px;
-      font-size: 18px;
-      color: #0f0;
-      border: 1px solid #0f0;
-      background: rgba(0, 15, 0, 0.8);
-      border-radius: 10px 0 0 10px;
-    }
-
-    button {
-      width: 120px;
-      font-size: 18px;
-      border: none;
-      background: #00ff55;
-      color: black;
-      border-radius: 0 10px 10px 0;
-      cursor: pointer;
-      text-shadow: 0 0 5px black;
-      font-weight: bold;
-    }
-
-    /* سهم الفأرة الأخضر المتوهج */
-    body {
-      cursor: none;
-    }
-
-    #cursor {
-      position: fixed;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #0f0;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 999;
-      box-shadow: 0 0 12px #0f0;
+      border-bottom: 1px solid cyan;
     }
   </style>
 </head>
 
 <body>
 
-<canvas id="matrix"></canvas>
+  <h1>MisterAI GPT 🤖</h1>
 
-<h1>MisterAI Chat 2025</h1>
+  <div class="container">
+    <div id="messages"></div>
 
-<div id="chatbox"></div>
+    <br>
 
-<div id="inputArea">
-  <input id="msg" placeholder="اكتب رسالتك واضغط Enter...">
-  <button onclick="sendMessage()">إرسال</button>
-</div>
+    <input id="userInput" type="text" placeholder="اكتب رسالتك..." />
+    <button onclick="sendMessage()">إرسال</button>
+  </div>
 
-<div id="cursor"></div>
+  <script>
+    async function sendMessage() {
+      const msg = document.getElementById("userInput").value;
+      if (!msg.trim()) return;
 
-<script>
-  // ========== سهم الفأرة المتوهج ==========
-  document.addEventListener("mousemove", (e) => {
-    const c = document.getElementById("cursor");
-    c.style.left = e.pageX + "px";
-    c.style.top = e.pageY + "px";
-  });
+      // عرض رسالة المستخدم
+      addMessage("👤 أنت", msg);
 
-  // ========== نجوم Matrix ==========
-  const canvas = document.getElementById("matrix");
-  const ctx = canvas.getContext("2d");
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ prompt: msg })   // 🔥 تم إصلاح الخطأ هنا
+        });
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+        const data = await response.json();
 
-  const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const fontSize = 14;
-  const columns = canvas.width / fontSize;
+        if (data.reply) {
+          addMessage("🤖 MisterAI", data.reply);
+        } else {
+          addMessage("⚠️ خطأ", "لم يتم استلام رد من الخادم.");
+        }
 
-  const drops = Array(Math.floor(columns)).fill(1);
+      } catch (e) {
+        addMessage("⚠️ خطأ", "حدث خطأ في الاتصال بالـ API.");
+      }
 
-  function drawMatrix() {
-    ctx.fillStyle = "rgba(0,0,0,0.08)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "#0f0";
-    ctx.font = fontSize + "px monospace";
-
-    drops.forEach((y, i) => {
-      const text = letters.charAt(Math.floor(Math.random() * letters.length));
-      const x = i * fontSize;
-      ctx.fillText(text, x, y * fontSize);
-
-      if (y * fontSize > canvas.height && Math.random() > 0.95) drops[i] = 0;
-      drops[i]++;
-    });
-  }
-
-  setInterval(drawMatrix, 50);
-
-  // ========== إضافة رسالة إلى الشات ==========
-  function addMessage(sender, text) {
-    const box = document.getElementById("chatbox");
-    const div = document.createElement("div");
-    div.className = "msg";
-    div.innerHTML = `<b>${sender}</b><br>${text}`;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  // ========== إرسال الرسالة ==========
-  async function sendMessage() {
-    let text = document.getElementById("msg").value.trim();
-    if (!text) return;
-
-    addMessage("👤 أنت:", text);
-
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    });
-
-    const data = await res.json();
-
-    addMessage("🤖 MisterAI:", data.reply);
-
-    if (data.audioBase64) {
-      const audio = new Audio("data:audio/mp3;base64," + data.audioBase64);
-      audio.play();
+      document.getElementById("userInput").value = "";
     }
 
-    document.getElementById("msg").value = "";
-  }
-
-  // Enter key
-  document.getElementById("msg").addEventListener("keydown", e => {
-    if (e.key === "Enter") sendMessage();
-  });
-</script>
+    function addMessage(sender, text) {
+      const box = document.getElementById("messages");
+      const div = document.createElement("div");
+      div.className = "msg";
+      div.innerHTML = `<b>${sender}:</b> ${text}`;
+      box.prepend(div);
+    }
+  </script>
 
 </body>
 </html>
